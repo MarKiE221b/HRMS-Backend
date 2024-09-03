@@ -1,0 +1,10 @@
+{
+  "projectName": "hrms",
+  "meta": {
+    "type": "backend"
+  },
+  "backend": {
+    "platform": "node17"
+  },
+  "hash": "fb728d91"
+}
