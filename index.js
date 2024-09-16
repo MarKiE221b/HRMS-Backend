@@ -14,6 +14,7 @@ import ledgerRoutes from "./routes/ledger.js";
 import ctoRoutes from "./routes/cto.js";
 import pdfViewRoutes from "./routes/pdfView.js";
 import imagesViewRoutes from "./routes/imagesView.js";
+import profilePictureRoutes from "./routes/profilePicture.js";
 
 import { creditScheduler } from "./utils/creditAutoAdd.js";
 
@@ -28,9 +29,8 @@ app.use(express.urlencoded({ extended: true }));
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:4173",
-  "http://10.40.1.50:4173",
-  "http://10.40.1.50:5173",
-  "https://hrms-ched.vercel.app",
+  "http://10.40.1.88",
+  "http://10.40.1.88:5173",
 ];
 
 const corsOptions = {
@@ -58,6 +58,7 @@ app.use("/api/", ledgerRoutes);
 app.use("/api/", ctoRoutes);
 app.use("/api/", pdfViewRoutes);
 app.use("/api/", imagesViewRoutes);
+app.use("/api/", profilePictureRoutes);
 
 creditScheduler();
 
@@ -68,6 +69,6 @@ app.use((err, req, res, next) => {
 });
 
 // Start the Express server
-app.listen(port, "10.40.1.50", () => {
+app.listen(port, () => {
   console.log(`API working on port ${port}`);
 });

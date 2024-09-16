@@ -18,7 +18,6 @@ export const getPdf = async (req, res) => {
   const PDFFILEQUERY =
     "SELECT filename FROM cto_certificate WHERE certificate_id = ?";
 
-  console.log(req.body);
   try {
     const [pdf] = await executeQuery(PDFFILEQUERY, [req.body.id]);
 

@@ -3,19 +3,14 @@ import multer from "multer";
 import fs from "fs";
 import path from "path";
 
-import {
-  getEmpDetails,
-  getEmployeesCount,
-  getEmployeesList,
-  uploadSignature,
-} from "../controllers/employees.js";
 import { authenticateToken } from "../utils/authMiddleware.js";
+import { postUploadAvatar, viewAvatar } from "../controllers/profilePicture.js";
 
 const router = express.Router();
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, "uploads/signatures/");
+    cb(null, "uploads/pictures/");
   },
   filename: function (req, file, cb) {
     cb(null, `${Date.now()}_${file.originalname}`);
@@ -23,10 +18,10 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype === "image/png") {
+  if (file.mimetype === "image/jpeg" || file.mimetype === "image/png") {
     cb(null, true);
   } else {
-    cb(new Error("Please upload only png image"), false);
+    cb(new Error("Please upload only image files"), false);
   }
 };
 
@@ -37,10 +32,12 @@ if (!fs.existsSync(uploadsDir)) {
 
 const upload = multer({ storage: storage, fileFilter: fileFilter });
 
-router.get("/getEmployeesCount", authenticateToken, getEmployeesCount);
-router.get("/getEmployeesList", authenticateToken, getEmployeesList);
-router.post("/getEmployeeDetails", authenticateToken, getEmpDetails);
-router.put("/uploadSignature", authenticateToken, upload.single("file"), uploadSignature);
-
+router.get("/getUploadAvatar", authenticateToken, viewAvatar);
+router.post(
+  "/uploadAvatar",
+  authenticateToken,
+  upload.single("file"),
+  postUploadAvatar
+);
 
 export default router;

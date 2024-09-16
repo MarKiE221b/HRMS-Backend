@@ -1,4 +1,5 @@
 import { db } from "../connect.js";
+import { executeQuery } from "./../utils/dbUtils.js";
 
 export const getEmployeesCount = (req, res) => {
   const GETCOUNTQUERY = "SELECT COUNT(*) as no_employees FROM employees";
@@ -38,15 +39,6 @@ export const uploadSignature = async (req, res) => {
 
   const EMP_ID = req.user.emp_id;
   const QUERY = "UPDATE employees SET signature = ? WHERE emp_id = ?";
-
-  const executeQuery = (query, params) => {
-    return new Promise((resolve, reject) => {
-      db.query(query, params, (err, result) => {
-        if (err) return reject(err);
-        resolve(result);
-      });
-    });
-  };
 
   try {
     await executeQuery(QUERY, [req.file.filename, EMP_ID]);
