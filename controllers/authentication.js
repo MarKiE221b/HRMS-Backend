@@ -25,6 +25,7 @@ export const login = (req, res) => {
         secure: false,
         // sameSite: "none",
         path: "/",
+        domain: "special-stork-happily.ngrok-free.app"
       })
       .status(200)
       .json({ user: { emp_id, role } });
@@ -38,6 +39,7 @@ export const logout = (req, res) => {
       secure: false,
       // sameSite: "none",
       path: "/",
+      domain: "special-stork-happily.ngrok-free.app"
     })
     .status(200)
     .json({ message: "Logout!" });
