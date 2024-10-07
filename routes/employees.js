@@ -4,6 +4,7 @@ import fs from "fs";
 import path from "path";
 
 import {
+  editEmployee,
   getEmpDetails,
   getEmployeesCount,
   getEmployeesList,
@@ -40,7 +41,12 @@ const upload = multer({ storage: storage, fileFilter: fileFilter });
 router.get("/getEmployeesCount", authenticateToken, getEmployeesCount);
 router.get("/getEmployeesList", authenticateToken, getEmployeesList);
 router.post("/getEmployeeDetails", authenticateToken, getEmpDetails);
-router.put("/uploadSignature", authenticateToken, upload.single("file"), uploadSignature);
-
+router.put(
+  "/uploadSignature",
+  authenticateToken,
+  upload.single("file"),
+  uploadSignature
+);
+router.put("/editEmployeeDetails", authenticateToken, editEmployee);
 
 export default router;

@@ -48,3 +48,30 @@ export const uploadSignature = async (req, res) => {
     res.status(500).json({ message: "Server Error" });
   }
 };
+
+export const editEmployee = async (req, res) => {
+  try {
+    const QUERY = `UPDATE employees 
+        SET 
+          lastname= ?, firstname= ?, middlename= ?, ext_name= ?, unit= ?, division= ? 
+        WHERE 
+          emp_id = ?`;
+
+    const { acc_id, lastname, firstname, middlename, extName, unit, division } =
+      req.body;
+
+    await executeQuery(QUERY, [
+      lastname,
+      firstname,
+      middlename,
+      extName,
+      unit,
+      division,
+      acc_id,
+    ]);
+
+    res.status(200).json({ message: "Successfully Saved!" });
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
+};

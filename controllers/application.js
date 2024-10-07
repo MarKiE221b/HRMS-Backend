@@ -63,7 +63,7 @@ export const getApplication = (req, res) => {
   const GETAPPLICANTSQUERY = `
     SELECT a.app_id, t.type, a.no_days, a.inclusive_dates, a.details,
            a.OICStatus, a.OICStatusDate, a.CEPSStatus, a.CEPSStatusDate,
-           a.approvedStatus, a.approvedDateModified, e.division
+           a.approvedStatus, a.approvedDateModified, e.division, e.unit
     FROM application_leave a
     LEFT JOIN leave_type t ON a.type_id = t.type_id
     LEFT JOIN employees e ON a.emp_id = e.emp_id
@@ -88,23 +88,26 @@ export const getApplication = (req, res) => {
 export const getEmployeeApplication = (req, res) => {
   const EMP_ID = req.user.emp_id;
   const CONFIRMDIV = "SELECT division FROM employees WHERE emp_id = ?";
+
   const GETAPPLICANTIONQUERY = `
     SELECT a.app_id, CONCAT_WS(' ', e.lastname, e.firstname, IFNULL(e.middlename, ''), e.ext_name) AS full_name,
-           e.division, t.type, a.no_days, a.inclusive_dates, a.OICStatus, a.OICStatusDate,
+           e.division, e.unit, t.type, a.no_days, a.inclusive_dates, a.OICStatus, a.OICStatusDate,
            a.CEPSStatus, a.CEPSStatusDate, a.approvedStatus, a.approvedDateModified
     FROM application_leave a
     LEFT JOIN leave_type t ON a.type_id = t.type_id
     LEFT JOIN employees e ON a.emp_id = e.emp_id
-    WHERE e.division = ?
+    WHERE e.division = ? AND e.unit NOT IN ('Chief Education Program Specialist', 'Chief Administrative Officer')
     ORDER BY app_id DESC;
   `;
+
   const APPLICATIONQUERYFORADMIN = `
     SELECT a.app_id, CONCAT_WS(' ', e.lastname, e.firstname, IFNULL(e.middlename, ''), e.ext_name) AS full_name,
-           e.division, t.type, a.no_days, a.inclusive_dates, a.OICStatus, a.OICStatusDate,
+           e.division, e.unit, t.type, a.no_days, a.inclusive_dates, a.OICStatus, a.OICStatusDate,
            a.CEPSStatus, a.CEPSStatusDate, a.approvedStatus, a.approvedDateModified
     FROM application_leave a
     LEFT JOIN leave_type t ON a.type_id = t.type_id
     LEFT JOIN employees e ON a.emp_id = e.emp_id
+    WHERE e.unit NOT IN ('Chief Education Program Specialist', 'Chief Administrative Officer')
     ORDER BY app_id DESC;
   `;
 
@@ -140,7 +143,7 @@ export const getEmployeeApplication = (req, res) => {
 export const getAllApplication = (req, res) => {
   const GETALLQUERY = `
     SELECT a.app_id, CONCAT_WS(' ', e.lastname, e.firstname, IFNULL(e.middlename, ''), e.ext_name) AS full_name,
-           e.division, t.type, a.no_days, a.inclusive_dates, a.details,
+           e.division, e.unit, t.type, a.no_days, a.inclusive_dates, a.details,
            a.OICStatus, a.OICStatusDate, a.CEPSStatus, a.CEPSStatusDate,
            a.approvedStatus, a.approvedDateModified
     FROM application_leave a
@@ -173,14 +176,18 @@ export const pendingNotifCount = async (req, res) => {
   const COUNTOICQUERY = `
     SELECT COUNT(app_id) AS notifCount
     FROM application_leave
-    WHERE OICStatus = "Pending";
+    WHERE OICStatus = "Pending" AND emp_id NOT IN (
+      SELECT emp_id 
+      FROM employees 
+      WHERE unit IN ('Chief Education Program Specialist', 'Chief Administrative Officer')
+    );
   `;
 
   const COUNTCEPSQUERY = `
     SELECT COUNT(app_id) AS notifCount
     FROM application_leave 
     LEFT JOIN employees ON application_leave.emp_id = employees.emp_id
-    WHERE employees.division = "Technical" AND CEPSStatus = "Pending";
+    WHERE employees.division = "Technical" AND CEPSStatus = "Pending" AND employees.unit NOT IN ('Chief Education Program Specialist', 'Chief Administrative Officer');
   `;
 
   try {

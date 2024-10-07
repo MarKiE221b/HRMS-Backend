@@ -21,7 +21,8 @@ const getEmployeeBalances = async () => {
   const CREDITBALQUERY = `
     SELECT employees.emp_id, 
            COALESCE(MAX(leave_credits.vacation_balance), 0) AS vacation_balance, 
-           COALESCE(MAX(leave_credits.sick_balance), 0) AS sick_balance 
+           COALESCE(MAX(leave_credits.sick_balance), 0) AS sick_balance,
+           COALESCE(MAX(leave_credits.CTO_balance), 0) AS CTO_balance
     FROM employees 
     LEFT JOIN leave_credits ON employees.emp_id = leave_credits.emp_id 
     GROUP BY employees.emp_id`;
@@ -33,10 +34,10 @@ const insertCreditBalance = async (creditId, employeeData) => {
   const INSERTQUERYBALANCE = `
     INSERT INTO leave_credits(
       credit_id, emp_id, period, particulars, remarks, vacation_earned, vacation_AUpay, vacation_AUwopay, 
-      vacation_balance, sick_earned, sick_AUpay, sick_AUwopay, sick_balance
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      vacation_balance, sick_earned, sick_AUpay, sick_AUwopay, sick_balance, CTO_balance
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-  const { emp_id, vacation_balance, sick_balance } = employeeData;
+  const { emp_id, vacation_balance, sick_balance, CTO_balance } = employeeData;
   const currentDate = new Date();
   const monthNames = [
     "January",
@@ -69,6 +70,7 @@ const insertCreditBalance = async (creditId, employeeData) => {
     0,
     0,
     sick_balance + 1.25,
+    CTO_balance,
   ];
 
   return executeQuery(INSERTQUERYBALANCE, values);
