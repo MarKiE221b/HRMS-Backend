@@ -13,7 +13,7 @@ export const getEmployeesCount = (req, res) => {
 
 export const getEmployeesList = (req, res) => {
   const GETCOUNTQUERY =
-    "SELECT emp_id, CONCAT_WS(' ', e.lastname, e.firstname, IF(e.middlename IS NOT NULL, e.middlename, ''), e.ext_name) AS full_name, unit, division FROM employees e";
+    "SELECT emp_id, CONCAT_WS(' ', e.lastname, e.firstname, IF(e.middlename IS NOT NULL, e.middlename, ''), e.ext_name) AS full_name, unit, division FROM employees e WHERE e.division != 'HR' AND e.division != 'RD'";
 
   db.query(GETCOUNTQUERY, (err, response) => {
     if (err) return res.status(500).json({ message: "Server Error" });
