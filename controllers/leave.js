@@ -75,7 +75,6 @@ export const updateEmployeeLeaveRD = async (req, res) => {
     const formattedDate = getFormattedDate();
     const payTypeClean = payType ? parseInt(payType) : null;
 
-    console.log(payType);
     const updateStatusQuery = `
       UPDATE application_leave 
       SET approvedStatus = ?, approvedDateModified = ?, 
@@ -97,7 +96,7 @@ export const updateEmployeeLeaveRD = async (req, res) => {
 
     const leaveResult = await executeQuery(
       `
-      SELECT emp_id, type_id, inclusive_dates, minus_vacation, minus_sick, minus_CTO 
+      SELECT emp_id, type_id, no_days, inclusive_dates, minus_vacation, minus_sick, minus_CTO 
       FROM application_leave WHERE app_id = ?
     `,
       [id]
@@ -111,6 +110,7 @@ export const updateEmployeeLeaveRD = async (req, res) => {
       emp_id,
       type_id,
       inclusive_dates,
+      no_days,
       minus_vacation,
       minus_sick,
       minus_CTO,
@@ -127,7 +127,7 @@ export const updateEmployeeLeaveRD = async (req, res) => {
 
     const creditResult = await executeQuery(
       `
-      SELECT credit_id, vacation_balance, sick_balance, CTO_balance 
+      SELECT credit_id, vacation_balance, sick_balance, personal_balance, forced_balance, CTO_balance 
       FROM leave_credits 
       WHERE emp_id = ? 
       ORDER BY credit_id DESC
@@ -139,12 +139,23 @@ export const updateEmployeeLeaveRD = async (req, res) => {
       return res.status(404).json({ message: "Leave credits not found" });
     }
 
-    const { vacation_balance, sick_balance, CTO_balance } = creditResult[0];
+    const {
+      vacation_balance,
+      sick_balance,
+      CTO_balance,
+      personal_balance,
+      forced_balance,
+    } = creditResult[0];
     let newVacationBalance = vacation_balance - minus_vacation;
     let newSickBalance = sick_balance - minus_sick;
     let newCTOBalance = CTO_balance - minus_CTO;
+    let newPersonalBalance =
+      type_id === "PL006"
+        ? personal_balance - minus_vacation
+        : personal_balance;
+    let newForcedBalance =
+      type_id === "ML002" ? forced_balance - no_days : forced_balance;
 
-    console.log(newVacationBalance, vacation_balance, minus_vacation);
     const particulars = minus_CTO
       ? `CTO - ${minus_CTO}`
       : minus_vacation
@@ -157,8 +168,8 @@ export const updateEmployeeLeaveRD = async (req, res) => {
       INSERT INTO leave_credits
       (credit_id, emp_id, period, particulars, 
        vacation_AUpay, vacation_AUwopay, vacation_balance, 
-       sick_AUpay, sick_AUwopay, sick_balance, CTO_consumed, CTO_balance)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       sick_AUpay, sick_AUwopay, sick_balance, personal_AUpay, personal_AUwopay, personal_balance, forced_AUpay, forced_AUwopay, forced_balance, CTO_consumed, CTO_balance)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     await executeQuery(updateBalQuery, [
@@ -172,6 +183,12 @@ export const updateEmployeeLeaveRD = async (req, res) => {
       payTypeClean === 0 ? minus_sick : 0,
       payTypeClean === 1 ? minus_sick : 0,
       newSickBalance,
+      payTypeClean === 0 && type_id === "PL006" ? no_days : 0,
+      payTypeClean === 1 && type_id === "PL006" ? no_days : 0,
+      newPersonalBalance,
+      payTypeClean === 0 && type_id === "ML002" ? no_days : 0,
+      payTypeClean === 1 && type_id === "ML002" ? no_days : 0,
+      newForcedBalance,
       minus_CTO,
       newCTOBalance,
     ]);
@@ -225,7 +242,7 @@ export const uploadLeaveForms = async (req, res) => {
     // latest balance query execution
     const creditResult = await executeQuery(
       `
-      SELECT credit_id, vacation_balance, sick_balance, CTO_balance 
+      SELECT credit_id, vacation_balance, sick_balance, CTO_balance, personal_balance, forced_balance 
       FROM leave_credits 
       WHERE emp_id = ? 
       ORDER BY credit_id DESC
@@ -235,16 +252,39 @@ export const uploadLeaveForms = async (req, res) => {
 
     // credit insert query
     const LEAVEINSERTQUERY =
-      "INSERT INTO leave_credits(credit_id, emp_id, document_id, period, particulars, vacation_AUpay, vacation_AUwopay, vacation_balance, sick_AUpay, sick_AUwopay, sick_balance, CTO_consumed, CTO_balance) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+      "INSERT INTO leave_credits(credit_id, emp_id, document_id, period, particulars, vacation_AUpay, vacation_AUwopay, vacation_balance, sick_AUpay, sick_AUwopay, sick_balance, personal_AUpay, personal_AUwopay, personal_balance, forced_AUpay, forced_AUwopay, forced_balance, CTO_consumed, CTO_balance) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     //  balance variables
-    const { vacation_balance, sick_balance, CTO_balance } = creditResult[0];
+    const {
+      vacation_balance,
+      sick_balance,
+      CTO_balance,
+      personal_balance,
+      forced_balance,
+    } = creditResult[0];
     let newVacationBal =
-      leaveType === "VC001" ? vacation_balance - noRender : vacation_balance;
+      leaveType === "VC001" || leaveType === "PL006"
+        ? vacation_balance - noRender
+        : vacation_balance;
     let newSickBal =
       leaveType === "SL003" ? sick_balance - noRender : sick_balance;
     let newCTOBal =
       leaveType === "CTO001" ? CTO_balance - noRender : CTO_balance;
+    let newPersonalBalance =
+      leaveType === "PL006" ? personal_balance - noRender : personal_balance;
+    let newForcedBalance =
+      leaveType === "ML002" ? forced_balance - noRender : forced_balance;
+
+    let pdLeave = 0;
+    let nonPdLeave = 0;
+
+    if (leaveType === "VC001" || leaveType === "PL006") {
+      if (payCheck) {
+        pdLeave = noRender;
+      } else {
+        nonPdLeave = noRender;
+      }
+    }
 
     // leave insert execution
     await executeQuery(LEAVEINSERTQUERY, [
@@ -253,12 +293,18 @@ export const uploadLeaveForms = async (req, res) => {
       fileId,
       `${inclusiveDates.map((date) => date).join(", ")}`,
       particulars,
-      leaveType === "VC001" && payCheck === "true" ? noRender : 0,
-      leaveType === "VC001" && payCheck === "false" ? noRender : 0,
+      pdLeave,
+      nonPdLeave,
       newVacationBal,
-      leaveType === "SL003" && payCheck === "true" ? noRender : 0,
-      leaveType === "SL003" && payCheck === "false" ? noRender : 0,
+      leaveType === "SL003" && payCheck === true ? noRender : 0,
+      leaveType === "SL003" && payCheck === false ? noRender : 0,
       newSickBal,
+      leaveType === "PL006" && payCheck === true ? noRender : 0,
+      leaveType === "PL006" && payCheck === false ? noRender : 0,
+      newPersonalBalance,
+      leaveType === "ML002" && payCheck === true ? noRender : 0,
+      leaveType === "ML002" && payCheck === false ? noRender : 0,
+      newForcedBalance,
       leaveType === "CTO001" ? noRender : 0,
       newCTOBal,
     ]);

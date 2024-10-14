@@ -15,12 +15,15 @@ export const getAllLedger = (req, res) => {
     ROUND(COALESCE(l.CTO_earned, 0), 2) AS CTO_earned,
     ROUND(COALESCE(l.CTO_consumed, 0), 2) AS CTO_consumed,
     ROUND(COALESCE(l.CTO_balance, 0), 2) AS CTO_balance,
-    COALESCE(cc.certificate_id, '') AS certificate_id
+    COALESCE(cc.certificate_id, '') AS certificate_id,
+    COALESCE(dd.document_id, '') AS document_id
 FROM employees e
 LEFT JOIN leave_credits l
 	ON e.emp_id = l.emp_id
 LEFT JOIN cto_certificate cc 
     ON l.certificate_id =cc.certificate_id
+LEFT JOIN leave_documents dd
+    ON l.document_id = dd.document_id
 WHERE e.emp_id = ?`;
 
   db.query(GETLEDGERQUERY, [EMP_ID], (err, response) => {

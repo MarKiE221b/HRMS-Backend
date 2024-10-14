@@ -16,7 +16,9 @@ export const getUserInfo = async (req, res) => {
     const USERFINDQUERY = `SELECT e.lastname, e.firstname, e.middlename, e.ext_name, e.unit, e.division,
          ROUND(COALESCE(l.vacation_balance, 0), 2) AS vacation_balance,
          ROUND(COALESCE(l.sick_balance, 0), 2) AS sick_balance,
-         ROUND(COALESCE(l.CTO_balance, 0), 2) AS CTO_balance
+         ROUND(COALESCE(l.CTO_balance, 0), 2) AS CTO_balance,
+         ROUND(COALESCE(l.personal_balance, 0), 2) AS personal_balance,
+         ROUND(COALESCE(l.forced_balance, 0), 2) AS forced_balance
   FROM employees e
   LEFT JOIN leave_credits l 
       ON e.emp_id = l.emp_id 
