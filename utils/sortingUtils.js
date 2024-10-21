@@ -14,20 +14,19 @@ export const parseDateString = (dateString) => {
     December: 11,
   };
 
-  // Split by comma to handle multiple dates
-  const dateStrings = dateString.split(",").map(part => part.trim());
-  const dates = dateStrings.map(singleDate => {
-    const parts = singleDate.split(" ");
-    if (parts.length === 3) {
-      const [month, day, year] = parts;
-      return new Date(year, monthMapping[month], day);
-    }
-    return null; // Handle invalid date formats
-  });
-
-  return dates.filter(date => date !== null); // Filter out any null values
+  if (dateString.includes("-")) {
+    const [start] = dateString.split("-").map((part) => part.trim());
+    const [month, day, year] = start.split(" ");
+    return new Date(year, monthMapping[month], day);
+  } else if (dateString.includes(",")) {
+    const [firstPart] = dateString.split(",").map((part) => part.trim());
+    const [month, day, year] = firstPart.split(" ");
+    return new Date(year, monthMapping[month], day);
+  } else {
+    const [month, year] = dateString.split(" ");
+    return new Date(year, monthMapping[month], 1);
+  }
 };
-
 
 export const recalculateBalances = (data) => {
   const roundUpToTwoDecimalPlaces = (num) => {
