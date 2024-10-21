@@ -17,14 +17,26 @@ export const parseDateString = (dateString) => {
   if (dateString.includes("-")) {
     const [start] = dateString.split("-").map((part) => part.trim());
     const [month, day, year] = start.split(" ");
+
     return new Date(year, monthMapping[month], day);
   } else if (dateString.includes(",")) {
     const [firstPart] = dateString.split(",").map((part) => part.trim());
     const [month, day, year] = firstPart.split(" ");
+
     return new Date(year, monthMapping[month], day);
   } else {
-    const [month, year] = dateString.split(" ");
-    return new Date(year, monthMapping[month], 1);
+    const formatLength = dateString.split(" ").length;
+
+    if (formatLength === 3) {
+      const [month, day, year] = dateString.split(" ");
+      return new Date(year, monthMapping[month], day);
+    } else if (formatLength === 2) {
+      const [month, year] = dateString.split(" ");
+      return new Date(year, monthMapping[month], 31);
+    } else {
+      const [month, year] = dateString.split(" ");
+      return new Date(year, monthMapping[month], 1);
+    }
   }
 };
 

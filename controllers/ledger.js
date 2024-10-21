@@ -35,13 +35,6 @@ export const getAllLedger = async (req, res) => {
       const dateA = parseDateString(a.period);
       const dateB = parseDateString(b.period);
 
-      const categoryA = a.split(" ").length; // Count the number of parts in the string
-      const categoryB = b.split(" ").length;
-
-      if (categoryA !== categoryB) {
-        return categoryA - categoryB; // Fewer parts come first
-      }
-      
       return dateA - dateB; // Ascending order
     });
 
