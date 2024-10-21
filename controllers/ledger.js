@@ -1,6 +1,6 @@
 import { db } from "../connect.js";
 import { executeQuery } from "../utils/dbUtils.js";
-import { parseDateString } from "../utils/sortingUtils.js";
+import { parseDateString, recalculateBalances } from "../utils/sortingUtils.js";
 
 export const getAllLedger = async (req, res) => {
   try {
@@ -37,7 +37,9 @@ export const getAllLedger = async (req, res) => {
       return dateA - dateB; // Ascending order
     });
 
-    res.status(200).json(response);
+    const updatedResponse = recalculateBalances(response);
+
+    res.status(200).json(updatedResponse);
   } catch (error) {
     console.error("Server Error:", error);
     res.status(500).json({ message: "Server Error" });

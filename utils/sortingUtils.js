@@ -27,3 +27,43 @@ export const parseDateString = (dateString) => {
     return new Date(year, monthMapping[month], 1);
   }
 };
+
+export const recalculateBalances = (data) => {
+  const roundUpToTwoDecimalPlaces = (num) => {
+    return Math.ceil(num * 100) / 100;
+  };
+
+  let previousBalance = {
+    vacation: roundUpToTwoDecimalPlaces(parseFloat(data[0].vacation_balance)), // Start with the first row's balance
+    sick: roundUpToTwoDecimalPlaces(parseFloat(data[0].sick_balance)),
+    CTO: roundUpToTwoDecimalPlaces(parseFloat(data[0].CTO_balance)),
+  };
+
+  return data.map((row, index) => {
+    if (index === 0) {
+      return row;
+    }
+
+    const newRow = { ...row };
+
+    previousBalance.vacation = roundUpToTwoDecimalPlaces(
+      previousBalance.vacation +
+        row.vacation_earned -
+        row.vacation_AUpay -
+        row.vacation_AUwopay
+    );
+    newRow.vacation_balance = previousBalance.vacation;
+
+    previousBalance.sick = roundUpToTwoDecimalPlaces(
+      previousBalance.sick + row.sick_earned - row.sick_AUpay - row.sick_AUwopay
+    );
+    newRow.sick_balance = previousBalance.sick;
+
+    previousBalance.CTO = roundUpToTwoDecimalPlaces(
+      previousBalance.CTO + row.CTO_earned - row.CTO_consumed
+    );
+    newRow.CTO_balance = previousBalance.CTO;
+
+    return newRow;
+  });
+};
