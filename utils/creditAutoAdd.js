@@ -22,7 +22,9 @@ const getEmployeeBalances = async () => {
     SELECT employees.emp_id, 
            COALESCE(MAX(leave_credits.vacation_balance), 0) AS vacation_balance, 
            COALESCE(MAX(leave_credits.sick_balance), 0) AS sick_balance,
-           COALESCE(MAX(leave_credits.CTO_balance), 0) AS CTO_balance
+           COALESCE(MAX(leave_credits.CTO_balance), 0) AS CTO_balance,
+           COALESCE(MAX(leave_credits.personal_balance), 0) AS personal_balance,
+           COALESCE(MAX(leave_credits.forced_balance), 0) AS forced_balance
     FROM employees 
     LEFT JOIN leave_credits ON employees.emp_id = leave_credits.emp_id 
     GROUP BY employees.emp_id`;
@@ -31,13 +33,19 @@ const getEmployeeBalances = async () => {
 };
 
 const insertCreditBalance = async (creditId, employeeData) => {
-  const INSERTQUERYBALANCE = `
-    INSERT INTO leave_credits(
-      credit_id, emp_id, period, particulars, remarks, vacation_earned, vacation_AUpay, vacation_AUwopay, 
-      vacation_balance, sick_earned, sick_AUpay, sick_AUwopay, sick_balance, CTO_balance
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+  const INSERTQUERYBALANCE = `REPLACE INTO leave_credits (
+  credit_id, emp_id, period, particulars, remarks, vacation_earned, vacation_AUpay, vacation_AUwopay, 
+  vacation_balance, sick_earned, sick_AUpay, sick_AUwopay, sick_balance, personal_AUpay, personal_AUwopay, personal_balance, forced_AUpay, forced_AUwopay, forced_balance, CTO_balance
+) SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ? FROM employees e WHERE e.emp_id != '001' AND e.emp_id != '002'`;
 
-  const { emp_id, vacation_balance, sick_balance, CTO_balance } = employeeData;
+  const {
+    emp_id,
+    vacation_balance,
+    sick_balance,
+    personal_balance,
+    forced_balance,
+    CTO_balance,
+  } = employeeData;
   const currentDate = new Date();
   const monthNames = [
     "January",
@@ -59,7 +67,7 @@ const insertCreditBalance = async (creditId, employeeData) => {
   const values = [
     creditId,
     emp_id,
-    period,
+    "October 2024",
     "Credits Earned",
     "Automated monthly update",
     1.25,
@@ -70,6 +78,12 @@ const insertCreditBalance = async (creditId, employeeData) => {
     0,
     0,
     sick_balance + 1.25,
+    0,
+    0,
+    personal_balance,
+    0,
+    0,
+    forced_balance,
     CTO_balance,
   ];
 

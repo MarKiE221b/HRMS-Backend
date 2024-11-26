@@ -12,8 +12,27 @@ export const getEmployeesCount = (req, res) => {
 };
 
 export const getEmployeesList = (req, res) => {
-  const GETCOUNTQUERY =
-    "SELECT emp_id, CONCAT_WS(' ', e.lastname, e.firstname, IF(e.middlename IS NOT NULL, e.middlename, ''), e.ext_name) AS full_name, unit, division FROM employees e WHERE e.division != 'HR' AND e.division != 'RD'";
+  const GETCOUNTQUERY = `SELECT 
+    e.emp_id, 
+    CONCAT_WS(' ', e.lastname, e.firstname, IF(e.middlename IS NOT NULL, e.middlename, ''), e.ext_name) AS full_name, 
+    unit, 
+    division,  
+    ROUND(COALESCE(l.vacation_balance, 0), 2) AS vacation_balance,
+    ROUND(COALESCE(l.sick_balance, 0), 2) AS sick_balance,
+    ROUND(COALESCE(l.CTO_balance, 0), 2) AS CTO_balance,
+    ROUND(COALESCE(l.personal_balance, 0), 2) AS personal_balance,
+    ROUND(COALESCE(l.forced_balance, 0), 2) AS forced_balance
+FROM 
+    employees e 
+LEFT JOIN (
+    SELECT emp_id, MAX(credit_id) AS latest_credit_id
+    FROM leave_credits
+    GROUP BY emp_id
+) lc ON e.emp_id = lc.emp_id
+LEFT JOIN leave_credits l ON lc.latest_credit_id = l.credit_id
+WHERE 
+    e.division != 'HR' AND e.division != 'RD'
+ORDER BY e.emp_id;`;
 
   db.query(GETCOUNTQUERY, (err, response) => {
     if (err) return res.status(500).json({ message: "Server Error" });
