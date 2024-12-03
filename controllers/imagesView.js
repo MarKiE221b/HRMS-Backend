@@ -44,11 +44,11 @@ export const postSignatureApplication = async (req, res) => {
 
 export const getOfficersSignature = async (req, res) => {
   const QUERY = `SELECT 
-    emp_id, signature, unit 
+    emp_id, signature, unit, lastname, firstname, middlename, ext_name 
   FROM 
     employees 
   WHERE 
-    unit = "Chief Administrative Officer" OR unit = "Chief Education Program Specialist" OR unit = "Director IV"`;
+    unit = "OIC - Chief Administrative Officer" OR unit = "Chief Administrative Officer" OR unit = "Chief Education Program Specialist" OR unit = "OIC - Chief Education Program Specialist" OR unit = "Director IV" OR unit = "OIC - Director IV"`;
 
   try {
     const imgResults = await executeQuery(QUERY);
@@ -68,6 +68,9 @@ export const getOfficersSignature = async (req, res) => {
       const mimeType = "image/png"; // Replace with actual mime type if different
 
       return {
+        name: `${img?.firstname} ${
+          img?.middlename ? img?.middlename + " " : ""
+        }${img?.lastname}, ${img?.ext_name || ""}`,
         emp_id: img.emp_id,
         unit: img.unit,
         base64: `data:${mimeType};base64,${image}`,
