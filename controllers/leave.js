@@ -151,7 +151,7 @@ export const updateEmployeeLeaveRD = async (req, res) => {
     let newCTOBalance = CTO_balance - minus_CTO;
     let newPersonalBalance =
       type_id === "PL006"
-        ? personal_balance - minus_vacation
+        ? personal_balance - no_days
         : personal_balance;
     let newForcedBalance =
       type_id === "ML002" ? forced_balance - no_days : forced_balance;
@@ -263,7 +263,7 @@ export const uploadLeaveForms = async (req, res) => {
       forced_balance,
     } = creditResult[0];
     let newVacationBal =
-      leaveType === "VC001" || leaveType === "PL006"
+      leaveType === "VC001" || leaveType === "ML002"
         ? vacation_balance - noRender
         : vacation_balance;
     let newSickBal =
@@ -278,7 +278,7 @@ export const uploadLeaveForms = async (req, res) => {
     let pdLeave = 0;
     let nonPdLeave = 0;
 
-    if (leaveType === "VC001" || leaveType === "PL006") {
+    if (leaveType === "VC001" || leaveType === "ML002") {
       if (payCheck) {
         pdLeave = noRender;
       } else {

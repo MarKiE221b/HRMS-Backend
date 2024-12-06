@@ -10,7 +10,7 @@ export const application = (req, res) => {
   const leaveTypes = {
     SL003: "minus_sick",
     VC001: "minus_vacation",
-    PL006: "minus_vacation",
+    ML002: "minus_vacation",
     CTO001: "minus_CTO",
   };
 
